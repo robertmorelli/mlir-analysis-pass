@@ -22,6 +22,8 @@
 #ifndef ZERO_DOMAIN_H
 #define ZERO_DOMAIN_H
 
+#include <algorithm>
+#include "FloatFormats.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace zero {
@@ -42,36 +44,73 @@ inline const char *name(Kind kind) {
   return "top";
 }
 
-struct ZeroState {
+struct IntReprState {
   Kind kind = Kind::Bottom;
+  int lowestOne = -1;
+  int highestOne = -1;
 
-  ZeroState() = default;
-  /* implicit */ ZeroState(Kind kind) : kind(kind) {}
+  IntReprState() = default;
+  /* implicit */ IntReprState(Kind kind) : kind(kind) {}
+  IntReprState(Kind kind, int lowestOne, int highestOne)
+      : kind(kind), lowestOne(lowestOne), highestOne(highestOne) {}
 
-  static ZeroState bottom() { return Kind::Bottom; }
-  static ZeroState top() { return Kind::Top; }
+  static IntReprState bottom() { return Kind::Bottom; }
+  static IntReprState top() { return Kind::Top; }
 
   bool isBottom() const { return kind == Kind::Bottom; }
 
-  /// Least upper bound.  Two disagreeing facts lose all information.
-  static ZeroState join(const ZeroState &lhs, const ZeroState &rhs) {
+  int lpo() {
+    if (lowestOne == -1)
+      return 0;
+    return lowestOne;
+  }
+
+  int hpo(int width) {
+    if (highestOne == -1)
+      return width - 1;
+    return highestOne;
+  }
+
+  static IntReprState join(const IntReprState &lhs, const IntReprState &rhs) {
     if (lhs.kind == Kind::Bottom)
       return rhs;
     if (rhs.kind == Kind::Bottom)
       return lhs;
-    if (lhs.kind == rhs.kind)
-      return lhs;
-    return top();
+    auto joinedKind = lhs.kind == rhs.kind ? lhs.kind : Kind::Top;
+    if (lhs.kind == Kind::Top || rhs.kind == Kind::Top)
+      joinedKind = Kind::Top;
+
+    if (lhs.kind == Kind::Zero)
+      return {joinedKind, rhs.lowestOne, rhs.highestOne};
+    if (rhs.kind == Kind::Zero)
+      return {joinedKind, lhs.lowestOne, lhs.highestOne};
+
+    if (lhs.lowestOne == -1 || rhs.lowestOne == -1)
+      return {joinedKind, -1, -1};
+    return {joinedKind, std::min(lhs.lowestOne, rhs.lowestOne),
+            std::max(lhs.highestOne, rhs.highestOne)};
   }
 
-  bool operator==(const ZeroState &other) const { return kind == other.kind; }
-  bool operator!=(const ZeroState &other) const { return kind != other.kind; }
+  bool operator==(const IntReprState &other) const {
+    return kind == other.kind && lowestOne == other.lowestOne &&
+           highestOne == other.highestOne;
+  }
+  bool operator!=(const IntReprState &other) const { return !(*this == other); }
 
-  void print(llvm::raw_ostream &os) const { os << name(kind); }
+  void print(llvm::raw_ostream &os) const {
+    os << name(kind);
+    bool first = true;
+    for (const auto &format : formats) {
+      if (!format.can_represent(*this))
+        continue;
+      os << (first ? "; available \"int\" representations" : ", ") << format.name;
+      first = false;
+    }
+  }
 };
 
 inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                     const ZeroState &state) {
+                                     const IntReprState &state) {
   state.print(os);
   return os;
 }

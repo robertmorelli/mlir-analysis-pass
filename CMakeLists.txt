@@ -100,11 +100,14 @@ add_definitions(${LLVM_DEFINITIONS})
 # ask CMake via $<TARGET_FILE:ZeroAnalysis>, or let run.sh probe for it.
 #===----------------------------------------------------------------------===#
 add_llvm_library(ZeroAnalysis MODULE PARTIAL_SOURCES_INTENDED
+  FloatFormats.cpp
   ZeroAnalysis.cpp
   Annotate.cpp
   Plugin.cpp
   PLUGIN_TOOL mlir-opt
 )
+
+target_compile_options(ZeroAnalysis PRIVATE -Wwritable-strings)
 
 set_target_properties(ZeroAnalysis PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")

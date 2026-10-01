@@ -54,14 +54,15 @@ struct ZeroAnalysisPass
       const auto *lattice = solver.lookupState<zero::ZeroLattice>(value);
       if (!lattice)
         return {};
-      zero::Kind kind = lattice->getValue().kind;
-      // Top and bottom say nothing; printing them would bury the real facts.
-      if (kind == zero::Kind::Top || kind == zero::Kind::Bottom)
+      const auto &state = lattice->getValue();
+      if (state.isBottom() ||
+          (state.kind == zero::Kind::Top && state.lowestOne == -1))
         return {};
       std::string description;
       llvm::raw_string_ostream os(description);
       value.printAsOperand(os, asmState);
-      os << " is " << zero::name(kind);
+      os << " is ";
+      state.print(os);
       return description;
     };
 

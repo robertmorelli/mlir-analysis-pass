@@ -67,3 +67,5 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+.DS_Store
+zig-out/bin/zero-analysis
