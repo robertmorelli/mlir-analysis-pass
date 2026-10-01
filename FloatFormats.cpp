@@ -3,9 +3,9 @@
 
 namespace zero {
 
-FloatFormats formats[7] = {{"i8", 8, 0}, {"i16", 16, 0}, {"i32", 32, 0}, {"i64", 64, 0}, {"f16", 11, 5}, {"f32", 24, 8}, {"f64", 53, 11}};
+FloatFormat formats[8] = {{"i8", 8, 0}, {"i16", 16, 0}, {"i32", 32, 0}, {"i64", 64, 0}, {"f16", 11, 5}, {"f32", 24, 8}, {"f64", 53, 11}, {"F8E4M3", 3, 4}};
 
-bool FloatFormats::can_represent(const IntReprState &state) const {
+bool FloatFormat::can_represent(const IntReprState &state) const {
   if (state.kind == Kind::Bottom)
     return false;
   if (state.kind == Kind::Zero)

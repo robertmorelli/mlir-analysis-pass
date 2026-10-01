@@ -156,3 +156,14 @@ terminate.
 The analysis is intraprocedural. It does not refine facts on branch conditions,
 so a value tested against zero is not known nonzero on the taken edge — that,
 and a rule for `llvm.or`, are the natural first extensions.
+
+## Find fun facts
+this will find a few locations in sqlite where f32 works as an int representation but i32 doesnt
+```sh
+clang -S -emit-llvm -o - input.c |
+  mlir-translate --import-llvm |
+  mlir-opt --load-pass-plugin=build/ZeroAnalysis.dylib \
+    --pass-pipeline='builtin.module(zero-analysis)' -o /dev/null 2>&1 |
+  grep -v 'i32' | grep 'i64, f32' 
+```
+so i guess they could have saved 4 bytes somewhere... maybe

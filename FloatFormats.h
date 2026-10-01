@@ -5,7 +5,7 @@ namespace zero {
 
 struct IntReprState;
 
-struct FloatFormats {
+struct FloatFormat {
   const char *name;
   unsigned significandBits;
   unsigned exponentBits;
@@ -13,7 +13,7 @@ struct FloatFormats {
   bool can_represent(const IntReprState &state) const;
 };
 
-extern FloatFormats formats[7];
+extern FloatFormat formats[8];
 
 }
 

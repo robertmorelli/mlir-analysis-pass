@@ -103,7 +103,7 @@ struct IntReprState {
     for (const auto &format : formats) {
       if (!format.can_represent(*this))
         continue;
-      os << (first ? "; available \"int\" representations" : ", ") << format.name;
+      os << (first ? "; available \"int\" representations " : ", ") << format.name;
       first = false;
     }
   }
